@@ -413,31 +413,67 @@ UIFactory["Get_Resource"].prototype.displayEditor = function(destid,type,langcod
 		var target = queryattr_value.substring(srce_indx+1); // label or text
 		//------------
 		var portfoliocode = cleanCode(replaceVariable(queryattr_value.substring(0,semtag_indx)));
-		var selfcode = $("code",$("asmRoot>asmResource[xsi_type='nodeRes']",g_portfolio_current)).text();
-		if (portfoliocode.indexOf('.')<0 && selfcode.indexOf('.')>0 && portfoliocode!='self')  // There is no project, we add the project of the current portfolio
-			portfoliocode = selfcode.substring(0,selfcode.indexOf('.')) + "." + portfoliocode;
-		if (portfoliocode=='self') {
-			portfoliocode = selfcode;
-			cachable = false;
+		// ==============================================================================
+		if (portfoliocode.indexOf("ROME")>-1){  // ==== ROME =====
+			var self = this;
+			if (cachable && g_Get_Resource_caches[queryattr_value]!=undefined && g_Get_Resource_caches[queryattr_value]!="")
+				UIFactory["Get_Resource"].parseROME(destid,type,langcode,g_Get_Resource_caches[queryattr_value],self,disabled,srce,resettable,target,semtag,multiple_tags);
+			else {
+				$.ajax({
+					type : "GET",
+					dataType : "json",
+					url : serverBCK+"/rome/"+semtag,
+					success : function(data) {
+						if (cachable)
+							g_Get_Resource_caches[queryattr_value] = data;
+						UIFactory["Get_Resource"].parseROME(destid,type,langcode,data,self,disabled,srce,resettable,target,semtag,multiple_tags);
+					}
+				});
+			}
+		} else if  (portfoliocode.indexOf("CNAM")>-1){  // ==== CNAM =====
+			var self = this;
+			if (cachable && g_Get_Resource_caches[queryattr_value]!=undefined && g_Get_Resource_caches[queryattr_value]!="")
+				UIFactory["Get_Resource"].parseCNAM(destid,type,langcode,g_Get_Resource_caches[queryattr_value],self,disabled,srce,resettable,target,semtag,multiple_tags);
+			else {
+				$.ajax({
+					type : "GET",
+					dataType : "json",
+					url : serverBCK+"/cnam/"+semtag,
+					success : function(data) {
+						if (cachable)
+							g_Get_Resource_caches[queryattr_value] = data;
+						UIFactory["Get_Resource"].parseCNAM(destid,type,langcode,data,self,disabled,srce,resettable,target,semtag,multiple_tags);
+					}
+				});
+			}
+		// ==============================================================================
+		} else {	// ==== KARUTA =====
+			var selfcode = $("code",$("asmRoot>asmResource[xsi_type='nodeRes']",g_portfolio_current)).text();
+			if (portfoliocode.indexOf('.')<0 && selfcode.indexOf('.')>0 && portfoliocode!='self')  // There is no project, we add the project of the current portfolio
+				portfoliocode = selfcode.substring(0,selfcode.indexOf('.')) + "." + portfoliocode;
+			if (portfoliocode=='self') {
+				portfoliocode = selfcode;
+				cachable = false;
+			}
+			//------------
+			var self = this;
+			if (cachable && g_Get_Resource_caches[portfoliocode+semtag]!=undefined && g_Get_Resource_caches[portfoliocode+semtag]!="")
+				self.parse(destid,type,langcode,g_Get_Resource_caches[portfoliocode+semtag],disabled,srce,resettable,target,semtag,multiple_tags,portfoliocode,semtag2,cachable);
+			else {
+				$.ajax({
+					async:false,
+					type : "GET",
+					dataType : "xml",
+					url : serverBCK_API+"/nodes?portfoliocode=" + portfoliocode + "&semtag="+semtag.replace("!",""),
+					success : function(data) {
+						if (cachable)
+							g_Get_Resource_caches[portfoliocode+semtag] = data;
+						self.parse(destid,type,langcode,data,disabled,srce,resettable,target,semtag,multiple_tags,portfoliocode,semtag2,cachable);
+					}
+				});
+			}
+			//------------
 		}
-		//------------
-		var self = this;
-		if (cachable && g_Get_Resource_caches[portfoliocode+semtag]!=undefined && g_Get_Resource_caches[portfoliocode+semtag]!="")
-			self.parse(destid,type,langcode,g_Get_Resource_caches[portfoliocode+semtag],disabled,srce,resettable,target,semtag,multiple_tags,portfoliocode,semtag2,cachable);
-		else {
-			$.ajax({
-				async:false,
-				type : "GET",
-				dataType : "xml",
-				url : serverBCK_API+"/nodes?portfoliocode=" + portfoliocode + "&semtag="+semtag.replace("!",""),
-				success : function(data) {
-					if (cachable)
-						g_Get_Resource_caches[portfoliocode+semtag] = data;
-					self.parse(destid,type,langcode,data,disabled,srce,resettable,target,semtag,multiple_tags,portfoliocode,semtag2,cachable);
-				}
-			});
-		}
-		//------------
 	}
 	if (this.get_type=="import_comp"){
 		let portfoliocode = cleanCode(replaceVariable(this.query_portfolio));
@@ -1547,7 +1583,7 @@ UIFactory["Get_Resource"].update = function(selected_item,itself,langcode,type)
 		$(itself.value_node[0]).text(value);
 		$(itself.code_node[0]).text(code);
 		$(itself.uuid_node[0]).text(uuid);
-		$(itself.style_node[0]).text(style.trim());
+//		$(itself.style_node[0]).text(style.trim());
 		for (var i=0; i<languages.length;i++){
 			var label = $(selected_item).attr('label_'+languages[i]);
 			//---------------------
@@ -1987,4 +2023,366 @@ function import_get_multiple(parentid,targetid,title,query_portfolio,query_semta
 }
 
 //======================================================================================
+
+//==================================
+UIFactory["Get_Resource"].parseROME = function(destid,type,langcode,data,self,disabled,srce,resettable,target,semtag,multiple_tags) {
+//==================================
+	//---------------------
+	if (langcode==null)
+		langcode = LANGCODE;
+	if (!self.multilingual)
+		langcode = NONMULTILANGCODE;
+	if (disabled==null)
+		disabled = false;
+	if (resettable==null)
+		resettable = true;
+	//---------------------
+	if (type==undefined || type==null)
+		type = 'select';
+	//---------------------
+	var cachable = true;
+	var langcode = LANGCODE;
+	var semtag = 'rome';
+	var display_code = true;
+	var display_label = true;
+	var self_code = $(self.code_node).text();
+	//-----Node ordering-------------------------------------------------------
+	var newTableau1 = data;
+	//------------------------------------------------------------
+	if (type=='select') {
+		var html ="";
+		html += "<form autocomplete='off'>";
+		html += "</form>";
+		var form = $(html);
+		html = "";
+		html += "<div class='auto-complete btn-group roles-choice'>";
+		html += "<input id='input_"+self.id+"' type='text' class='btn btn-default select select-rome' code= '' value=''>";
+		html += "<button type='button' class='btn btn-default dropdown-toggle select' data-toggle='dropdown' aria-expanded='false'><span class='caret'></span><span class='sr-only'>&nbsp;</span></button>";
+		html += "</div>";
+		var btn_group = $(html);
+		$(form).append($(btn_group));
+		$("#"+destid).append(form);
+		var onupdate = "UIFactory.Get_Resource.update(input,self)";
+		autocomplete(document.getElementById("input_"+self.id), newTableau1,onupdate,self,langcode);
+		//-------------------------------------------------
+		html = "<ul class='dropdown-menu' role='menu'></ul>";
+		var select  = $(html);
+		//---------------------
+		var code = "";
+		var label = "";
+		html = "<li></li>";
+		var select_item = $(html);
+		html = "<a  value='' code='"+code+"' class='sel"+code+"' label_fr=\""+label+"\" >";
+		if (display_code)
+			html += "<span class='li-code'>"+code+"</span>";
+		if (display_label)
+			html += "<span class='li-label'>"+label+"</span>";
+		html += "</a>";			
+		var select_item_a = $(html);
+		$(select_item_a).click(function (ev){
+			//--------------------------------
+			var code = $(this).attr('code');
+			var display_code = false;
+			var display_label = true;
+			//--------------------------------
+			var html = "";
+			if (display_code)
+				html += code+" ";
+			if (display_label)
+				html += $(this).attr("label_fr");
+			$("#input_"+self.id).attr('value',html);
+			UIFactory["Get_Resource"].update(this,self,langcode);
+			//--------------------------------
+		});
+		$(select_item).append($(select_item_a))
+		$(select).append($(select_item));
+		//---------------------
+		for ( var i = 0; i < newTableau1.length; i++) {
+			//------------------------------
+			var code = newTableau1[i].code;
+			var label = newTableau1[i].libelle;
+			html = "<li></li>";
+			var select_item = $(html);
+			html = "<a  value='' code='"+code+"' class='sel"+code+"' label_fr=\""+label+"\" >";
+			if (display_code)
+				html += "<span class='li-code'>"+code+"</span>";
+			if (display_label)
+				html += "<span class='li-label'>"+label+"</span>";
+			html += "</a>";			
+			var select_item_a = $(html);
+			$(select_item_a).click(function (ev){
+				//--------------------------------
+				var code = $(this).attr('code');
+				var display_code = false;
+				var display_label = true;
+				//--------------------------------
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += $(this).attr("label_fr");
+				$("#input_"+self.id).attr('value',html);
+				UIFactory["Get_Resource"].update(this,self,langcode);
+				//--------------------------------
+			});
+			$(select_item).append($(select_item_a))
+			$(select).append($(select_item));
+			//-------------- update button -----
+			if (code!="" && self_code==code) {
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += label;
+				$("#button_"+self.id).html(html);
+			}
+		}
+		//---------------------
+		$(btn_group).append($(select));
+	}
+	if (type=='completion') {
+		var html ="";
+		html += "<form autocomplete='off'>";
+		html += "</form>";
+		var form = $(html);
+		html = "";
+		html += "<div class='auto-complete btn-group roles-choice'>";
+		html += "<input id='input_"+self.id+"' type='text' class='btn btn-default select select-rome' code= '' value=''>";
+		html += "<button type='button' class='btn btn-default dropdown-toggle select' data-toggle='dropdown' aria-expanded='false'><span class='caret'></span><span class='sr-only'>&nbsp;</span></button>";
+		html += "</div>";
+		var btn_group = $(html);
+		$(form).append($(btn_group));
+		$("#"+destid).append(form);
+		var onupdate = "UIFactory.Get_Resource.update(inp,self)";
+		autocomplete(document.getElementById("input_"+self.id), newTableau1,onupdate,self,langcode);
+		//===============
+		html = "<ul class='dropdown-menu' role='menu'></ul>";
+		var select  = $(html);
+		//---------------------
+		for ( var i = 0; i < newTableau1.length; i++) {
+			//------------------------------
+			var code = newTableau1[i].code;
+			var label = newTableau1[i].libelle;
+			html = "<li></li>";
+			var select_item = $(html);
+			html = "<a  value='' code='"+code+"' class='sel"+code+"' label_fr=\""+label+"\" >";
+			if (display_code)
+				html += "<span class='li-code'>"+code+"</span>";
+			if (display_label)
+				html += "<span class='li-label'>"+label+"</span>";
+			html += "</a>";			
+			var select_item_a = $(html);
+			$(select_item_a).click(function (ev){
+				//--------------------------------
+				var code = $(this).attr('code');
+				var display_code = false;
+				var display_label = true;
+				//--------------------------------
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += $(this).attr("label_fr");
+				$("#input_"+self.id).attr("value",html);
+				UIFactory["Get_Resource"].update(this,self,langcode);
+				//--------------------------------
+			});
+			$(select_item).append($(select_item_a))
+			$(select).append($(select_item));
+			//-------------- update button -----
+			if (code!="" && self_code==code) {
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += label;
+				$("#input_"+self.id).attr("value",html);
+			}
+		}
+		//---------------------
+		$(btn_group).append($(select));
+	}
+}
+
+//==================================
+UIFactory["Get_Resource"].parseCNAM = function(destid,type,langcode,data,self,disabled,srce,resettable,target,semtag,multiple_tags) {
+//==================================
+	//---------------------
+	if (langcode==null)
+		langcode = LANGCODE;
+	if (!self.multilingual)
+		langcode = NONMULTILANGCODE;
+	if (disabled==null)
+		disabled = false;
+	if (resettable==null)
+		resettable = true;
+	//---------------------
+	if (type==undefined || type==null)
+		type = 'select';
+	//---------------------
+	var cachable = true;
+	var langcode = LANGCODE;
+	var semtag = 'cnam';
+	var display_code = true;
+	var display_label = true;
+	var self_code = $(self.code_node).text();
+	//-----Node ordering-------------------------------------------------------
+	var tableau1 = data;
+	//------------------------------------------------------------
+	$('#wait-window').modal('hide');
+	if (type=='select') {
+		var newTableau2 = [];
+		var html ="";
+		html += "<form autocomplete='off'>";
+		html += "</form>";
+		var form = $(html);
+		html = "";
+		html += "<div class='auto-complete btn-group roles-choice'>";
+		html += "<input id='input_"+self.id+"' type='text' class='btn btn-default select select-rome' code= '' value=''>";
+		html += "<button type='button' class='btn btn-default dropdown-toggle select' data-toggle='dropdown' aria-expanded='false'><span class='caret'></span><span class='sr-only'>&nbsp;</span></button>";
+		html += "</div>";
+		var btn_group = $(html);
+		$(form).append($(btn_group));
+		$("#"+destid).append(form);
+		//-------------------------------------------------
+		html = "<ul class='dropdown-menu' role='menu'></ul>";
+		var select  = $(html);
+		//---------------------
+		html = "<li></li>";
+		var select_item = $(html);
+		html = "<a  value='' code='' label_fr='&nbsp;' >&nbsp;</a>";
+		var select_item_a = $(html);
+		$(select_item_a).click(function (ev){
+			//--------------------------------
+			var code = $(this).attr('code');
+			var display_code = true;
+			var display_label = true;
+			//--------------------------------
+			var html = "";
+			if (display_code)
+				html += code+" ";
+			if (display_label)
+				html += $(this).attr("label_fr");
+			$("#input_"+self.id).attr("value",html);
+			UIFactory["Get_Resource"].update(this,self,langcode);
+			//--------------------------------
+		});
+		$(select_item).append($(select_item_a))
+		$(select).append($(select_item));
+		var sortFonction = sortJsonOnCode;
+		if (tableau1[0].code==undefined)
+			sortFonction = sortJsonOnCodeInterne;
+		var newTableau1 = tableau1.sort(sortFonction);
+		//---------------------
+		for ( var i = 0; i < newTableau1.length; i++) {
+			//------------------------------
+			var code = (newTableau1[i].code==undefined)?newTableau1[i].code_interne:newTableau1[i].code;
+			var label = (newTableau1[i].intitule==undefined)?newTableau1[i].intitule_officiel:newTableau1[i].intitule;
+			newTableau2.push({'code':code,'libelle':code+" - "+label});
+			html = "<li></li>";
+			var select_item = $(html);
+			html = "<a  value='' code='"+code+"' class='sel"+code+"' label_fr=\""+label+"\" >";
+			if (display_code)
+				html += "<span class='li-code'>"+code+"</span>";
+			if (display_label)
+				html += "<span class='li-label'>"+label+"</span>";
+			html += "</a>";			
+			var select_item_a = $(html);
+			$(select_item_a).click(function (ev){
+				//--------------------------------
+				var code = $(this).attr('code');
+				var display_code = true;
+				var display_label = true;
+				//--------------------------------
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += $(this).attr("label_fr");
+				$("#input_"+self.id).attr("value",html);
+				UIFactory["Get_Resource"].update(this,self,langcode);
+				//--------------------------------
+			});
+			$(select_item).append($(select_item_a))
+			$(select).append($(select_item));
+			//-------------- update button -----
+			if (code!="" && self_code==code) {
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += label;
+				$("#input_"+self.id).attr("value",html);
+			}
+		}
+		//---------------------
+		$(btn_group).append($(select));
+		var onupdate = "UIFactory.Get_Resource.update(input,self)";
+		autocomplete(document.getElementById("input_"+self.id), newTableau2,onupdate,self,langcode);
+}
+	if (type=='completion') {
+		var newTableau2 = [];
+		var html ="";
+		html += "<form autocomplete='off'>";
+		html += "</form>";
+		var form = $(html);
+		html = "";
+		html += "<div class='auto-complete btn-group roles-choice'>";
+		html += "<input id='input_"+self.id+"' type='text' class='btn btn-default select select-cnam' code= '' value=''>";
+		html += "<button type='button' class='btn btn-default dropdown-toggle select' data-toggle='dropdown' aria-expanded='false'><span class='caret'></span><span class='sr-only'>&nbsp;</span></button>";
+		html += "</div>";
+		var btn_group = $(html);
+		$(form).append($(btn_group));
+		$("#"+destid).append(form);
+		//===============
+		html = "<ul class='dropdown-menu' role='menu'></ul>";
+		var select  = $(html);
+		//---------------------
+		for ( var i = 0; i < newTableau1.length; i++) {
+			//------------------------------
+			var code = newTableau1[i].code;
+			var label = newTableau1[i].intitule;
+			newTableau2.push({'code':code,'libelle':label});
+			html = "<li></li>";
+			var select_item = $(html);
+			html = "<a  value='' code='"+code+"' class='sel"+code+"' label_fr=\""+label+"\" >";
+			if (display_code)
+				html += "<span class='li-code'>"+code+"</span>";
+			if (display_label)
+				html += "<span class='li-label'>"+label+"</span>";
+			html += "</a>";			
+			var select_item_a = $(html);
+			$(select_item_a).click(function (ev){
+				//--------------------------------
+				var code = $(this).attr('code');
+				var display_code = false;
+				var display_label = true;
+				//--------------------------------
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += $(this).attr("label_fr");
+				$("#input_"+self.id).attr("value",html);
+				UIFactory["Get_Resource"].update(this,self,langcode);
+				//--------------------------------
+			});
+			$(select_item).append($(select_item_a))
+			$(select).append($(select_item));
+			//-------------- update button -----
+			if (code!="" && self_code==code) {
+				var html = "";
+				if (display_code)
+					html += code+" ";
+				if (display_label)
+					html += label;
+				$("#input_"+self.id).attr("value",html);
+			}
+		}
+		//---------------------
+		$(btn_group).append($(select));
+		var onupdate = "UIFactory.Get_Resource.update(input,self)";
+		autocomplete(document.getElementById("input_"+self.id), newTableau2,onupdate,self,langcode);
+	}
+}
 
