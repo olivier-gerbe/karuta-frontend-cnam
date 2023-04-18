@@ -1627,16 +1627,9 @@ function sendEmailPublicURL(encodeddata,email,langcode) {
 	var serverURL = url.substring(0,url.indexOf("/application/htm"));
 	if (url.indexOf("/application/htm")<0)
 		serverURL = url.substring(0,url.indexOf("/karuta/htm"));
-	url = serverURL+"/karuta/htm/public.htm?i="+encodeddata+"&amp;lang="+languages[langcode];
+	url = serverURL+"-externe/karuta/htm/public.htm?i="+encodeddata+"&amp;lang="+languages[langcode];
 	//------------------------------
 	var message = "";
-//	message = g_sendEmailPublicURL_message.replace("##firstname##",USER.firstname);
-//	message = message.replace("##lastname##",USER.lastname);
-//	message = message.replace("#want-sharing#",karutaStr[LANG]['want-sharing']);
-//	message = message.replace("#see#",karutaStr[LANG]['see']);
-//	message = message.replace("#do not edit this#",url);
-	//------------------------------
-
 	var img = document.querySelector('#config-send-email-logo');
 	var imgB64 = getDataUrl(img);
 	var logo = "<img width='"+img.style.width+"' height='"+img.style.height+"' src=\""+imgB64+"\">";
@@ -2102,8 +2095,9 @@ function displayTechSupportForm(langcode)
 	if (langcode==null)
 		langcode = LANGCODE;
 	//---------------------
+	$("#edit-window-type").html("");
 	$("#edit-window-footer").html("");
-	$("#edit-window-title").html(karutaStr[LANG]['technical-support']);
+	$("#edit-window-title").html(karutaStr[LANG]['technical_support']);
 	var js1 = "javascript:$('#edit-window').modal('hide')";
 	var send_button = "<button id='send_button' class='btn'>"+karutaStr[LANG]['button-send']+"</button>";
 	var obj = $(send_button);
@@ -2114,7 +2108,7 @@ function displayTechSupportForm(langcode)
 		var subject = application_server+" - "+karutaStr[LANG]['sent-by']+" "+user_name + " ("+user_email+")";
 		//---------------------
 		var xml ="<node>";
-		xml +="<recipient>"+g_configVar['technical-support']+"</recipient>";
+		xml +="<recipient>"+g_configVar['tech-email']+"</recipient>";
 		xml +="<subject>"+subject+"</subject>";
 		xml +="<message>"+message+"</message>";
 		xml +="<sender>"+user_email+"</sender>";
