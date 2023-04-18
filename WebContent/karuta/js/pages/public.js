@@ -45,6 +45,7 @@ function displayKarutaPublic()
 	$('body').append(alertBox());
 	$('body').append(messageBox());
 	$('body').append(imageBox());
+	$('body').attr('class','CNAM public');
 
 	//---------------------------
 	$("#welcome").html(welcome[LANG]);

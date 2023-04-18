@@ -1,6 +1,6 @@
 //----------------------------------
-var appliname = 'karuta';
-var bckname = '';
+var appliname = 'moneparcours-externe';
+var bckname = '-externe';
 var serverBCK = "../../../karuta-backend"+bckname; // backend
 var serverBCK_API = "../../../karuta-backend"+bckname+"/rest/api";
 var fileserverBCK_API = "../../../karuta-fileserver/rest/api"; // fileserver
