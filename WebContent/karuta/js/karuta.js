@@ -160,13 +160,6 @@ function getNavBar(type,portfolioid,edit)
 	html += "		</button>";
 	html += "		<div class='navbar-collapse collapse' id='collapse-1'>";
 	html += "			<ul id='navbar-icons' class='mr-auto navbar-nav'>";
-	//---------------------HOME - TECHNICAL SUPPORT-----------------------
-	if (type=='login' || type=="create_account") {
-		html += "			<li id='navbar-mailto' class='nav-item icon'><a class='nav-link' href='mailto:"+g_configVar['technical-support']+"?subject="+karutaStr[LANG]['technical_support']+" ("+appliname+")' data-title='"+karutaStr[LANG]["button-technical-support"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-envelope' data-title='"+karutaStr[LANG]["technical_support"]+"' data-toggle='tooltip' data-placement='bottom'></i></a></li>";
-	} else if (USER.username.indexOf("karuser")<0) {
-		html += "			<li id='navbar-home' class='nav-item icon'><a class='nav-link' onclick='show_list_page()' data-title='"+karutaStr[LANG]["home"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-home'></i></a></li>";
-		html += "			<li id='navbar-mailto' class='nav-item icon'><a class='nav-link' href='javascript:displayTechSupportForm()' data-title='"+karutaStr[LANG]["technical_support"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-envelope'></i></a></li>";
-	}
 	//-------------------LANGUAGES---------------------------displayTechSupportForm(langcode)
 	if (languages.length>1) {
 		html += "	<li id='navbar-language' class='nav-item dropdown'>";
@@ -229,34 +222,42 @@ function getNavBar(type,portfolioid,edit)
 		} 
 		html += "			</ul>";
 		html += "<ul class='navbar-nav'>";
-		html += "	<li class='nav-item icon'>";
+		html += "	<li id='increase' class='nav-item icon'>";
 		html += "		<a class='nav-link' onclick='increaseFontSize()' style='cursor: zoom-in;' data-title='"+karutaStr[LANG]["button-increase"]+"' data-toggle='tooltip' data-placement='bottom' style='padding-top:.21rem;'><i style='font-size:120%' class='fa fa-font'></i></a>";
 		html += "	</li>";
-		html += "	<li class='nav-item icon'>";
+		html += "	<li id='decrease' class='nav-item icon'>";
 		html += "		<a class='nav-link' onclick='decreaseFontSize()' style='cursor: zoom-out;' data-title='"+karutaStr[LANG]["button-decrease"]+"' data-toggle='tooltip' data-placement='bottom'><i style='font-size:80%' class='fa fa-font'></i></a>";
 		html += "	</li>";
 		if (USER.username.indexOf("karuser")<0) {
 			//-----------------USERNAME-----------------------------------------
-			if (cas_url=="" || USER.admin) {
-				html += "	<li class='nav-item dropdown'>";
+			const shibboleth = true; //CNAM
+			if (!shibboleth && (cas_url=="" || USER.admin) ) {
+				html += "	<li id='user' class='nav-item dropdown'>";
 				html += "		<a class='nav-link dropdown-toggle' href='#' id='userDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'  data-title='"+karutaStr[LANG]["button-change-password"]+"' data-toggle='tooltip' data-placement='bottom'>";
 				html += "			<i class='fas fa-user'></i>&nbsp;&nbsp;"+USER.firstname+" "+USER.lastname;
 				html += " 		</a>";
-				html += "		<div class='dropdown-menu dropdown-menu-right' aria-labelledby='userDropdown'>";
+				html += "		<div id='usermenu' class='dropdown-menu dropdown-menu-right' aria-labelledby='userDropdown'>";
 				html += "				<a class='dropdown-item' href=\"javascript:UIFactory['User'].callChangePassword()\">"+karutaStr[LANG]['change_password']+"</a>";
 				if ((USER.creator && !USER.limited)  && !USER.admin)
 					html += "			<a class='dropdown-item' href=\"javascript:UIFactory['User'].callCreateTestUser()\">"+karutaStr[LANG]['create-test-user']+"</a>";
 				html += "		</div>";
 				html += "	</li>";
 			} else {
-				html += "	<li class='nav-item dropdown'>";
+				html += "	<li id='user' class='nav-item dropdown'>";
 				html += "		<i class='fas fa-user'></i>&nbsp;&nbsp;"+USER.firstname+" "+USER.lastname;
 				html += "	</li>";
 			}
 			//-----------------LOGOUT-----------------------------------------
-			html += "	<li class='nav-item icon'>";
+			html += "	<li id='logout' class='nav-item icon'>";
 			html += "				<a class='nav-link' onclick='logout()' data-title='"+karutaStr[LANG]["button-disconnect"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-sign-out-alt'></i></a>";
 			html += "	</li>";
+		}
+		//---------------------HOME - TECHNICAL SUPPORT-----------------------
+		if (type=='login' || type=="create_account") {
+			html += "			<li id='navbar-mailto' class='nav-item icon'><a class='nav-link' href='mailto:"+g_configVar['technical-support']+"?subject="+karutaStr[LANG]['technical_support']+" ("+appliname+")' data-title='"+karutaStr[LANG]["button-technical-support"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-envelope' data-title='"+karutaStr[LANG]["technical_support"]+"' data-toggle='tooltip' data-placement='bottom'></i></a></li>";
+		} else if (USER.username.indexOf("karuser")<0) {
+			html += "			<li id='navbar-home' class='nav-item icon'><a class='nav-link' onclick='show_list_page()' data-title='"+karutaStr[LANG]["home"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-home'></i></a></li>";
+			html += "			<li id='navbar-mailto' class='nav-item icon'><a class='nav-link' href='javascript:displayTechSupportForm()' data-title='"+karutaStr[LANG]["technical_support"]+"' data-toggle='tooltip' data-placement='bottom'><i class='fas fa-envelope'></i></a></li>";
 		}
 		html += "</ul>";
 	}
@@ -1328,6 +1329,23 @@ function sortOn1_2_3(a,b)
 	return a == b ? 0 : (a > b ? 1 : -1);
 }
 
+//==================================
+function sortJsonOnCode(a,b)
+//==================================
+{
+	a = a.code.toLowerCase();
+	b = b.code.toLowerCase();
+	return (a < b) ? -1 : (a > b) ? 1 : 0;
+}
+
+//==================================
+function sortJsonOnCodeInterne(a,b)
+//==================================
+{
+	a = a.code_interne.toLowerCase();
+	b = b.code_interne.toLowerCase();
+	return (a < b) ? -1 : (a > b) ? 1 : 0;
+}
 
 //==================================
 function getSendPublicURL(uuid,shareroles)

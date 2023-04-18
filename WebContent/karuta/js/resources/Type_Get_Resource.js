@@ -84,6 +84,7 @@ UIFactory["Get_Resource"] = function(node,condition)
 		this.multilingual = ($("metadata",node).attr('multilingual-node')=='Y') ? true : false;
 	this.inline = ($("metadata",node).attr('inline')=='Y') ? true : false;
 	this.reloadpage = ($("metadata",node).attr('reloadpage')=='Y') ? true : false;
+	this.queryattr_value = $("metadata-wad",node).attr('query');
 	this.display = {};
 	this.displayCode = {};
 	this.displayValue = {};
@@ -325,9 +326,11 @@ UIFactory["Get_Resource"].prototype.getView = function(dest,type,langcode,indash
 				html += "<span class='"+cleanCode(code)+"' style='";
 			else
 				html += "<div class='"+cleanCode(code)+" view-div' style='";
+			if (this.queryattr_value != undefined && this.queryattr_value.indexOf("CNAM")>-1)
+				html += "font-weight:bold;"
 			html += style;
 			html += "'>";
-			if (code.indexOf("#")>-1 && code.indexOf("##")<0) 
+			if ( (code.indexOf("#")>-1 && code.indexOf("##")<0) || (this.queryattr_value != undefined && this.queryattr_value.indexOf("CNAM")>-1)) 
 				html += "<span name='code'>" + cleanCode(code) + "</span> ";
 			if (code.indexOf("*")>-1)
 				html += "<span name='code'>" + cleanCode(code) + "</span> ";
@@ -345,6 +348,10 @@ UIFactory["Get_Resource"].prototype.getView = function(dest,type,langcode,indash
 				html += "</span>";
 			else
 				html += "</div>";
+			if (this.queryattr_value != undefined && this.queryattr_value.indexOf("CNAM")>-1){
+				html += text;
+			}
+
 		} else {	// type=='batchform'
 			html = label;
 		}

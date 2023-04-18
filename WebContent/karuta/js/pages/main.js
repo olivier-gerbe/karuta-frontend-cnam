@@ -9,7 +9,7 @@ function show_main_page()
 	setLanguageMenu("fill_main_page()");
 	$("#refresh").attr("onclick","fill_main_page()");
 	$("body").removeClass();
-	$("body").addClass("portfolio-container")
+	$("body").addClass("CNAM portfolio-container")
 //	$("#portfolio-container").html("");
 	$("#portfolio-container").attr('role',g_userroles[0]);
 	$("#main-portfolio").show();
@@ -131,7 +131,7 @@ function fill_main_page(portfolioid)
 				else {
 					var editmode = $("metadata[editmode]",data).attr('editmode');
 					if (editmode=="" || editmode==null || editmode==undefined)
-						g_edit = false;
+						g_edit = true; //CNAM
 					else
 						g_edit = (editmode=='Y');
 					}

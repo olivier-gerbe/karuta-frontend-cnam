@@ -947,19 +947,19 @@ body,
   color: var(--portfolio-text-color);
 }
 #main-portfolio #portfolio-container .dropdown-menu {
-  background-color: var(--portfolio-menu-background-color);
-  color: var(--portfolio-menu-text-color);
+  background-color: white;
+  color: #812f85;
 }
 #main-portfolio #portfolio-container .dropdown-menu .dropdown-item,
 #main-portfolio #portfolio-container .dropdown-menu a.dropdown-item {
   cursor: pointer;
-  background-color: var(--portfolio-menu-background-color);
-  color: var(--portfolio-menu-text-color);
+  background-color: white;
+  color: #812f85;
 }
 #main-portfolio #portfolio-container .dropdown-menu .dropdown-item:hover,
 #main-portfolio #portfolio-container .dropdown-menu a.dropdown-item:hover {
-  background-color: var(--portfolio-menu-text-color);
-  color: var(--portfolio-menu-background-color);
+  background-color: #f2f2f2;
+  color: #812f85;
 }
 #main-portfolio #portfolio-container .row {
   margin-right: 0px;
@@ -997,7 +997,6 @@ body,
 }
 #main-portfolio #portfolio-container #sidebar-content {
   color: var(--portfolio-sidebar-text-color);
-  padding-top: 15px;
   min-height: 100%;
   padding-left: 0px;
   padding-right: 0px;
@@ -1008,15 +1007,15 @@ body,
 #main-portfolio #portfolio-container #sidebar-content .sidebar-item {
   border-bottom: 1px solid var(--portfolio-sidebar-separator-color);
   padding-left: 15px;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 #main-portfolio #portfolio-container #sidebar-content .sidebar-item a {
   width: 100%;
 }
 #main-portfolio #portfolio-container #sidebar-content .sidebar-item .sidebar-item {
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   border-bottom: 0px solid var(--portfolio-sidebar-separator-color);
 }
 #main-portfolio #portfolio-container #sidebar-content .sidebar-link {
