@@ -362,11 +362,7 @@ UIFactory["Get_Get_Resource"].prototype.displayEditor = function(destid,type,lan
 				if (cachable && g_Get_Resource_caches[queryattr_value]!=undefined && g_Get_Resource_caches[queryattr_value]!="")
 					UIFactory["Get_Get_Resource"].parseROME(destid,type,langcode,g_Get_Resource_caches[queryattr_value],self,disabled,srce,portfoliocode);
 				else {
-					var url = serverBCK+"/rome/";
-					if (code_parent!='')
-							url+= semtag_parent+"/"+code_parent+"/"+semtag;
-					else
-						url+= semtag;
+					var url = serverBCK+"/rome/rome-metiers/v1/metiers/metier/"+code_parent;
 					$.ajax({
 						type : "GET",
 						dataType : "json",
@@ -1903,7 +1899,14 @@ UIFactory["Get_Get_Resource"].parseROME = function(destid,type,langcode,data,sel
 	var display_label = true;
 	var self_code = $(self.code_node).text();
 	//-----Node ordering-------------------------------------------------------
-	var newTableau1 = data;
+	var newTableau2 = data.competencesMobiliseesPrincipales;
+	var newTableau1 = [];
+	for ( var i = 0; i < newTableau2.length; i++) {
+		if (newTableau2[i].type=='COMPETENCE-DETAILLEE') {
+			newTableau1.push(newTableau2[i]);
+		}
+	}
+
 	//------------------------------------------------------------
 	if (type=='select') {
 		var html ="";

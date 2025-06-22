@@ -426,10 +426,17 @@ UIFactory["Get_Resource"].prototype.displayEditor = function(destid,type,langcod
 			if (cachable && g_Get_Resource_caches[queryattr_value]!=undefined && g_Get_Resource_caches[queryattr_value]!="")
 				UIFactory["Get_Resource"].parseROME(destid,type,langcode,g_Get_Resource_caches[queryattr_value],self,disabled,srce,resettable,target,semtag,multiple_tags);
 			else {
+				let url = null;
+				if(semtag=='domaine')
+					url = serverBCK+"/rome/rome-metiers/v1/metiers/domaine-professionnel";
+				if(semtag=='metier')
+					url = serverBCK+"/rome/rome-metiers/v1/metiers/metier";
+				if(semtag=='competences')
+					url = serverBCK+"/rome/rome-competences/v1/competences/competence-detaillee";
 				$.ajax({
 					type : "GET",
 					dataType : "json",
-					url : serverBCK+"/rome/"+semtag,
+					url : url,
 					success : function(data) {
 						if (cachable)
 							g_Get_Resource_caches[queryattr_value] = data;
